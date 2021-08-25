@@ -1,0 +1,20 @@
+{
+
+	"MultiSampleReadVizWorkflow.ref_fasta": "/home/ml2529/scratch60/SFARI/references/GRCh38_full_analysis_set_plus_decoy_hla.fa",
+	"MultiSampleReadVizWorkflow.ref_fasta_fai": "/home/ml2529/scratch60/SFARI/references/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai",
+	"MultiSampleReadVizWorkflow.ref_fasta_dict": "/home/ml2529/scratch60/SFARI/references/GRCh38_full_analysis_set_plus_decoy_hla.dict",
+	"MultiSampleReadVizWorkflow.ref_fasta_dict": "/home/ml2529/scratch60/SFARI/references/GRCh38_full_analysis_set_plus_decoy_hla.dict",
+
+	"MultiSampleReadVizWorkflow.callset_mt": "/home/ml2529/scratch60/SFARI/wdl_dev/annotated_combined.mt",
+	"MultiSampleReadVizWorkflow.sample_ids": "/home/ml2529/scratch60/SFARI/wdl_dev/SPARK_sample_ids.txt",
+	"MultiSampleReadVizWorkflow.sample_bam_tsv": "/home/ml2529/scratch60/SFARI/wdl_dev/readviz_sample_input.tsv",
+
+	"MultiSampleReadVizWorkflow.perl_script": "/home/ml2529/scratch60/SFARI/wdl_dev/subset_samples.pl",
+	"MultiSampleReadVizWorkflow.python_script1": "/home/ml2529/scratch60/dev2/gnomad-readviz/step1__select_samples.py",
+	"MultiSampleReadVizWorkflow.python_script2": "/home/ml2529/scratch60/dev2/gnomad-readviz/step2__rekey.py",
+	"MultiSampleReadVizWorkflow.python_script3": "/home/ml2529/scratch60/dev2/gnomad-readviz/step3__export_per_sample_tsvs.py",
+	"MultiSampleReadVizWorkflow.python_script4": "/home/ml2529/scratch60/dev2/gnomad-readviz/deidentify_bamout.py"
+
+
+
+}
