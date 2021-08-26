@@ -12,7 +12,7 @@ workflow MultiSampleReadVizWorkflow {
 		#File input_bai = sample[3]
 
 		Int PADDING_AROUND_VARIANT = 200
-		Int SAMPLES_PER_GROUP = 10
+		Int SAMPLES_PER_GROUP = 4
 
 		#File inputSamplesFile
 
@@ -111,14 +111,24 @@ workflow MultiSampleReadVizWorkflow {
 
 	}
 
-	Int num_groups = floor(length(DeIdentifyBam.de_identified_bam)/SAMPLES_PER_GROUP) + 1
+	#Int num_bam_samples = length(DeIdentifyBam.de_identified_bam)
+	#Int num_groups = ceil(num_bam_samples/SAMPLES_PER_GROUP)
 
-	scatter (group_num in range(num_groups)) {
+	#Int num_groups = floor((num_bam_samples/SAMPLES_PER_GROUP) - 0.000001) + 1
+
+	call DetermineNumGroups {
+		input:
+			num_bam_samples = length(DeIdentifyBam.de_identified_bam),
+			samples_per_group = SAMPLES_PER_GROUP
+	}
+
+
+	scatter (group_num in range(DetermineNumGroups.num_groups)) {
 
 		call DetermineBamID {
 			input:
 				group_num = group_num,
-				num_groups = num_groups,
+				num_groups = DetermineNumGroups.num_groups,
 				group_size = SAMPLES_PER_GROUP,
 				de_identified_bam = DeIdentifyBam.de_identified_bam
 		}		
@@ -127,14 +137,13 @@ workflow MultiSampleReadVizWorkflow {
 		call MergeBams {
 			input:
 				group_num = group_num,
-				num_groups = num_groups,
+				num_groups = DetermineNumGroups.num_groups,
 				group_size = SAMPLES_PER_GROUP,
 				combined_bamout_id = DetermineBamID.combined_bamout_id,
 				de_identified_bam = DeIdentifyBam.de_identified_bam,
 				variant_db = DeIdentifyBam.variant_db
 		}		
 	}
-
 
 	output {
 
@@ -153,6 +162,8 @@ workflow MultiSampleReadVizWorkflow {
 
 		Array[File] gatk_args = MergeBams.gatk_args
 		Array[File] combined_bam = MergeBams.combined_bam
+		Array[File] sql_file = MergeBams.sql_file
+		Array[File] combined_db = MergeBams.combined_db
 
 
 		#Array[File] output_raw_bam = PrintReadVizIntervals.output_raw_bam
@@ -171,6 +182,34 @@ workflow MultiSampleReadVizWorkflow {
 
 	}
 }
+
+task DetermineNumGroups {
+
+	input {
+		Int num_bam_samples
+		Int samples_per_group
+	}
+
+	command {
+		python << CODE
+
+		import math
+		print(math.ceil(${num_bam_samples}/${samples_per_group}))
+
+		CODE
+	}
+
+	output {
+		Int num_groups = read_int(stdout()) 
+	}
+
+	runtime {
+		cpus: 1
+		requested_memory: 2000
+	}
+}
+
+
 
 task ReadVizVariantTable {
 
@@ -376,10 +415,55 @@ task MergeBams {
 	command {
 		python << CODE
 
-		import hashlib
+		def combine_dbs(input_db_paths, set_combined_bamout_id=None, select_chrom=None, sqlite_queries_filename='test.sql', create_index=False):
+
+			sqlite_queries = []
+			sqlite_queries.append('CREATE TABLE "variants" ('
+				'"id" INTEGER NOT NULL PRIMARY KEY, '
+				'"chrom" VARCHAR(2) NOT NULL, '
+				'"pos" INTEGER NOT NULL, '
+				'"ref" TEXT NOT NULL, '
+				'"alt" TEXT NOT NULL, '
+				'"zygosity" INTEGER NOT NULL, '
+				'"qual" INTEGER NOT NULL, '
+				'"combined_bamout_id" TEXT, '
+				'"read_group_id" INTEGER NOT NULL);')
+
+			column_names_string = "chrom, pos, ref, alt, zygosity, qual, combined_bamout_id, read_group_id"
+			where_clause = 'WHERE chrom="%s"' % select_chrom if select_chrom else ""
+
+
+			for input_db_path in input_db_paths:
+				sqlite_queries.append(
+					'ATTACH "%s" as toMerge; ' % input_db_path +
+					'BEGIN; ' +
+					'INSERT INTO variants (%s) SELECT %s FROM toMerge.variants %s; ' % (column_names_string, column_names_string, where_clause) +
+					'COMMIT; ' +
+					'DETACH toMerge;')
+
+			if set_combined_bamout_id:
+				sqlite_queries.append(
+					'UPDATE variants SET combined_bamout_id="%s";' % set_combined_bamout_id)
+
+			if create_index:
+				sqlite_queries.append(
+					'CREATE INDEX variant_index ON "variants" ("chrom", "pos", "ref", "alt", "zygosity", "qual");')
+
+			sqlite_queries = "\n".join(sqlite_queries)
+
+
+			with open(sqlite_queries_filename, "wt") as f:
+				f.write(sqlite_queries)
+
 
 		de_identified_bams = ['${sep="','" de_identified_bam}']
 		group_bams = de_identified_bams[${group_num}::${num_groups}]
+
+		variant_dbs = ['${sep="','" variant_db}']
+		group_dbs = variant_dbs[${group_num}::${num_groups}]
+
+
+		combine_dbs(input_db_paths=group_dbs, set_combined_bamout_id="${combined_bamout_id}", sqlite_queries_filename='group${group_num}_queries.sql')
 
 		with open("inputs_${group_num}.list", "w") as fi:
 			for i in range(len(group_bams)):
@@ -392,12 +476,15 @@ task MergeBams {
 		--arguments_file "inputs_${group_num}.list" \
 		-O "${combined_bamout_id}.bam"
 
+		sqlite3 "${combined_bamout_id}.chrM.db" < "group${group_num}_queries.sql"
+
 	}
 
 	output {
+		File sql_file = "group${group_num}_queries.sql"
 		File gatk_args = "inputs_${group_num}.list"
 		File combined_bam = "${combined_bamout_id}.bam"
-
+		File combined_db = "${combined_bamout_id}.chrM.db"
 	}
 
 	runtime {
