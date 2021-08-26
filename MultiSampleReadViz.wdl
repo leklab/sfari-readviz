@@ -12,7 +12,7 @@ workflow MultiSampleReadVizWorkflow {
 		#File input_bai = sample[3]
 
 		Int PADDING_AROUND_VARIANT = 200
-		Int SAMPLES_PER_GROUP = 4
+		Int SAMPLES_PER_GROUP = 10
 
 		#File inputSamplesFile
 
@@ -145,6 +145,12 @@ workflow MultiSampleReadVizWorkflow {
 		}		
 	}
 
+	call combineDBs {
+		input:
+			chr = 'M',
+			group_variant_db = MergeBams.combined_db
+	}
+
 	output {
 
 		File outfile1 = ReadVizVariantTable.outfile
@@ -165,6 +171,7 @@ workflow MultiSampleReadVizWorkflow {
 		Array[File] sql_file = MergeBams.sql_file
 		Array[File] combined_db = MergeBams.combined_db
 
+		File chr_combined_db = combineDBs.chr_combined_db
 
 		#Array[File] output_raw_bam = PrintReadVizIntervals.output_raw_bam
 		#Array[File] output_raw_bai = PrintReadVizIntervals.output_raw_bai
@@ -492,6 +499,77 @@ task MergeBams {
 		requested_memory: 16000
 	}
 }
+
+task combineDBs {
+
+	input {
+		String chr
+		Array[File] group_variant_db
+	}
+
+	command {
+		python << CODE
+
+		def combine_dbs(input_db_paths, set_combined_bamout_id=None, select_chrom=None, sqlite_queries_filename='test.sql', create_index=False):
+
+			sqlite_queries = []
+			sqlite_queries.append('CREATE TABLE "variants" ('
+				'"id" INTEGER NOT NULL PRIMARY KEY, '
+				'"chrom" VARCHAR(2) NOT NULL, '
+				'"pos" INTEGER NOT NULL, '
+				'"ref" TEXT NOT NULL, '
+				'"alt" TEXT NOT NULL, '
+				'"zygosity" INTEGER NOT NULL, '
+				'"qual" INTEGER NOT NULL, '
+				'"combined_bamout_id" TEXT, '
+				'"read_group_id" INTEGER NOT NULL);')
+
+			column_names_string = "chrom, pos, ref, alt, zygosity, qual, combined_bamout_id, read_group_id"
+			where_clause = 'WHERE chrom="%s"' % select_chrom if select_chrom else ""
+
+
+			for input_db_path in input_db_paths:
+				sqlite_queries.append(
+					'ATTACH "%s" as toMerge; ' % input_db_path +
+					'BEGIN; ' +
+					'INSERT INTO variants (%s) SELECT %s FROM toMerge.variants %s; ' % (column_names_string, column_names_string, where_clause) +
+					'COMMIT; ' +
+					'DETACH toMerge;')
+
+			if set_combined_bamout_id:
+				sqlite_queries.append(
+					'UPDATE variants SET combined_bamout_id="%s";' % set_combined_bamout_id)
+
+			if create_index:
+				sqlite_queries.append(
+					'CREATE INDEX variant_index ON "variants" ("chrom", "pos", "ref", "alt", "zygosity", "qual");')
+
+			sqlite_queries = "\n".join(sqlite_queries)
+
+
+			with open(sqlite_queries_filename, "wt") as f:
+				f.write(sqlite_queries)
+
+
+		group_variant_dbs = ['${sep="','" group_variant_db}']
+		combine_dbs(input_db_paths=group_variant_dbs, sqlite_queries_filename='all_chr${chr}_queries.sql', create_index=True)
+
+		CODE
+
+		sqlite3 "all_variants.chr${chr}.db" < "all_chr${chr}_queries.sql"
+
+	}
+
+	output {
+		File chr_combined_db = "all_variants.chr${chr}.db"
+	}
+
+	runtime {
+		cpus: 4
+		requested_memory: 16000
+	}
+}
+
 
 
 task PrintReadVizIntervals {
