@@ -9,11 +9,11 @@
 	"MultiSampleReadVizWorkflow.sample_ids": "/home/ml2529/scratch60/SFARI/wdl_dev/SPARK_sample_ids.txt",
 	"MultiSampleReadVizWorkflow.sample_bam_tsv": "/home/ml2529/scratch60/SFARI/wdl_dev/readviz_sample_input.tsv",
 
-	"MultiSampleReadVizWorkflow.perl_script": "/home/ml2529/scratch60/SFARI/wdl_dev/subset_samples.pl",
-	"MultiSampleReadVizWorkflow.python_script1": "/home/ml2529/scratch60/dev2/gnomad-readviz/step1__select_samples.py",
-	"MultiSampleReadVizWorkflow.python_script2": "/home/ml2529/scratch60/dev2/gnomad-readviz/step2__rekey.py",
-	"MultiSampleReadVizWorkflow.python_script3": "/home/ml2529/scratch60/dev2/gnomad-readviz/step3__export_per_sample_tsvs.py",
-	"MultiSampleReadVizWorkflow.python_script4": "/home/ml2529/scratch60/dev2/gnomad-readviz/deidentify_bamout.py"
+	"MultiSampleReadVizWorkflow.perl_script": "scripts/subset_samples.pl",
+	"MultiSampleReadVizWorkflow.python_script1": "scripts/step1__select_samples.py",
+	"MultiSampleReadVizWorkflow.python_script2": "scripts/step2__rekey.py",
+	"MultiSampleReadVizWorkflow.python_script3": "scripts/step3__export_per_sample_tsvs.py",
+	"MultiSampleReadVizWorkflow.python_script4": "scripts/deidentify_bamout.py"
 
 
 
