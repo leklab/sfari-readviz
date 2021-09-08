@@ -5,7 +5,7 @@ This is the calling pipeline that has been used to create de-identified bam file
 * De-identify bam files by stripping all details from each read and then combine in individual bam files into a grouped bam file
 * Create an sqlite file so that variants can be searched and mapped to corresponding grouped bam file 
 
-All code is based the gnomAD readviz pipeline and scripts developed and tested for Google Cloud Platform and has been adapted to work on Institutional clusters. The gnomAD pipeline was implemented using a collection of scripts, while this implementation consolidates it into one WDL workflow.
+All code is based the [gnomAD readviz pipeline and scripts](https://github.com/broadinstitute/gnomad-readviz) developed and tested for Google Cloud Platform and has been adapted to work on Institutional clusters. The gnomAD pipeline was implemented using a collection of scripts, while this implementation consolidates it into one WDL workflow.
 
 ## Requirements
 
@@ -23,6 +23,13 @@ pysam
 tqdm
 ```
 
+### Note on environment
+To ensure that all the Requirements was in place, a conda environment was created. The command line
+```
+conda activate hail_jupyter
+```
+was used in some WDL task functions before python script was called.
+
 ### Running WDL using Cromwell
 The Readviz WDL pipeline is run using cromwell using the following command line.
 ```
@@ -39,6 +46,9 @@ The `launch.sh` file is a batch script that can be used to launch in Slurm by th
 sbatch launch.sh
 ```
 
+### Advanced Cromwell/WDL configuration
+For details, please see [SFARI mito call repo](https://github.com/leklab/sfari_mito_calling/blob/main/README.md).
+
 ### Inputs
 The main input file is specified in `readviz_inputs.json`. In summary this contains the location of the follow input files:
 * Hail matrix table of variant calls that variants will be sampled
@@ -52,12 +62,6 @@ There a two major outputs that can then be used by the SFARI browser (in the IGV
 * Various group BAM files with read data for each variant. This can be served as a static file by the web server.
 * Sqlite database file for each chromosome. This contains information on which file(s) a variant can be found, which can be queried by the GraphQL API.
 
-
-
-
-
-
-
-
-
+## Connecting to the GraphQL API code - example
+Will come back and write :o)
 
