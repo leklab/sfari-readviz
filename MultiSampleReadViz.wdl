@@ -12,7 +12,7 @@ workflow MultiSampleReadVizWorkflow {
 		#File input_bai = sample[3]
 
 		Int PADDING_AROUND_VARIANT = 200
-		Int SAMPLES_PER_GROUP = 10
+		Int SAMPLES_PER_GROUP = 100
 
 		#File inputSamplesFile
 
@@ -602,6 +602,7 @@ task PrintReadVizIntervals {
 
 		zcat ~{variants_tsv_bgz} | awk '{ OFS="\t" } { print("chr"$1, $2 - ~{padding_around_variant} - 1, $2 + ~{padding_around_variant}) }' > variant_windows.bed
 		#zcat "${sample} | awk '{ OFS="\t" } { print("chr"$1, $2 - ~{padding_around_variant} - 1, $2 + ~{padding_around_variant}) }' > variant_windows.bed
+		rm -rf ./variants_by_sample
 
 		# Sort the .bed file so that chromosomes are in the same order as in the input_cram file.
 		# Without this, if the input_cram has a different chromosome ordering (eg. chr1, chr10, .. vs. chr1, chr2, ..)

@@ -86,7 +86,11 @@ def main(args):
     mt = format_mt(args.input)
     #hl.parse_locus_interval('M:5592-5655',reference_genome='GRCh37')
     #mt = hl.filter_intervals(mt, [hl.parse_locus_interval('MT:5592-5655',reference_genome='GRCh37')])
-    mt = hl.filter_intervals(mt, [hl.parse_locus_interval('chrM:5592-5655',reference_genome='GRCh38')])
+
+    #mt = hl.filter_intervals(mt, [hl.parse_locus_interval('chrM:5592-5655',reference_genome='GRCh38')])
+    #mt = hl.filter_intervals(mt, [hl.parse_locus_interval('chrM:1',reference_genome='GRCh38')])
+
+    mt = hl.filter_intervals(mt, [hl.parse_locus_interval('chrM:500-16000',reference_genome='GRCh38')])
 
     '''
     meta_ht = hl.read_table(args.sample_metadata_ht)
