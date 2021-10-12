@@ -4,13 +4,18 @@
 	"MultiSampleReadVizWorkflow.ref_fasta_fai": "/mnt/ceph/users/sfida/DB/reference_genomes/GRCh38/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai",
 	"MultiSampleReadVizWorkflow.ref_fasta_dict": "/mnt/ceph/users/sfida/DB/reference_genomes/GRCh38/GRCh38_full_analysis_set_plus_decoy_hla.dict",
 
-	"MultiSampleReadVizWorkflow.sample_input_file": "/mnt/home/mlek/mlek/readviz/SPARK_WGS/spark_chr20_tsv_bams.tsv",
-	"MultiSampleReadVizWorkflow.chr": "20",
+	"MultiSampleReadVizWorkflow.callset_mt": "/mnt/home/mlek/mlek/annotated_combined.mt",
+	"MultiSampleReadVizWorkflow.sample_ids": "/mnt/home/mlek/mlek/SPARK_sample_ids.txt",
+	"MultiSampleReadVizWorkflow.sample_bam_tsv": "/mnt/home/mlek/mlek/readviz_sample_input2.tsv",
 
 	"MultiSampleReadVizWorkflow.gatk": "/mnt/home/sw/bioinfoCentos7/installs/GATK/4.2.1.0/gatk-4.2.1.0/gatk",
 	"MultiSampleReadVizWorkflow.samtools": "/mnt/home/sw/bioinfoCentos7/installs/samtools/1.8/bin/samtools",
 	"MultiSampleReadVizWorkflow.sqlite3": "/mnt/home/mlek/mlek/sqlite-tools-linux-x86-3360000/sqlite3",
 
+	"MultiSampleReadVizWorkflow.perl_script": "/mnt/home/mlek/mlek/sfari-readviz/scripts/subset_samples.pl",
+	"MultiSampleReadVizWorkflow.python_script1": "/mnt/home/mlek/mlek/sfari-readviz/scripts/step1__select_samples.py",
+	"MultiSampleReadVizWorkflow.python_script2": "/mnt/home/mlek/mlek/sfari-readviz/scripts/step2__rekey.py",
+	"MultiSampleReadVizWorkflow.python_script3": "/mnt/home/mlek/mlek/sfari-readviz/scripts/step3__export_per_sample_tsvs.py",
 	"MultiSampleReadVizWorkflow.python_script4": "/mnt/home/mlek/mlek/sfari-readviz/scripts/deidentify_bamout.py"
 
 

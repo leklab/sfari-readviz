@@ -7,14 +7,24 @@ workflow MultiSampleReadVizWorkflow {
 		File ref_fasta_fai
 		File ref_fasta_dict
 
-		String chr
+		#File variants_tsv_bgz = sample[1]
+		#File input_bam = sample[2]
+		#File input_bai = sample[3]
 
 		Int PADDING_AROUND_VARIANT = 200
-		Int SAMPLES_PER_GROUP = 500
+		Int SAMPLES_PER_GROUP = 100
 
+		#File inputSamplesFile
+
+		String callset_mt
+		File sample_ids
+		File sample_bam_tsv
+
+		File perl_script
+		File python_script1
+		File python_script2
+		File python_script3
 		File python_script4
-
-		File sample_input_file
 
 		String gatk
 		String samtools
@@ -22,7 +32,35 @@ workflow MultiSampleReadVizWorkflow {
 
 	}
 
-	Array[Array[String]] inputSamples = read_tsv(sample_input_file)
+
+	call ReadVizVariantTable {
+		input:
+			callset_mt = callset_mt,
+			python_script = python_script1
+	}
+
+	call KeyBySample {
+		input:
+			readviz_table = ReadVizVariantTable.outfile,
+			python_script = python_script2
+	}
+
+	call ExportPerSampleTSV {
+		input:
+			keyBySample_table = KeyBySample.outfile,
+			sample_ids = sample_ids,
+			python_script = python_script3
+
+	}
+
+	call MakeGATKTSV {
+		input:
+			samples_with_variants = ExportPerSampleTSV.samples_with_variants,
+			sample_bam_tsv = sample_bam_tsv,
+			perl_script = perl_script			
+	}
+
+	Array[Array[String]] inputSamples = read_tsv(MakeGATKTSV.outfile)
 
 	scatter (sample in inputSamples) {
 
@@ -34,7 +72,7 @@ workflow MultiSampleReadVizWorkflow {
 
 		call PrintReadVizIntervals {
 			input:
-				#all_variants_tsv_bgz = ExportPerSampleTSV.outfile,
+				all_variants_tsv_bgz = ExportPerSampleTSV.outfile,
 				variants_tsv_bgz = sample[1],
 				input_bam = sample[2],
 				input_bai = sample[3],
@@ -74,7 +112,7 @@ workflow MultiSampleReadVizWorkflow {
 				sample_id = output_prefix,
 				input_cram = ConvertBamToCram.output_bamout_cram,
 				input_crai = ConvertBamToCram.output_bamout_cram_crai,
-				sample_variants_tsv_bgz = sample[1],
+				sample_variants_tsv_bgz = PrintReadVizIntervals.sample_variants_tsv_bgz,
 				python_script = python_script4,
 				samtools = samtools
 		}
@@ -107,7 +145,6 @@ workflow MultiSampleReadVizWorkflow {
 				combined_bamout_id = DetermineBamID.combined_bamout_id,
 				de_identified_bam = DeIdentifyBam.de_identified_bam,
 				variant_db = DeIdentifyBam.variant_db,
-				chr = chr,
 				gatk = gatk,
 				sqlite3 = sqlite3
 		}		
@@ -115,17 +152,17 @@ workflow MultiSampleReadVizWorkflow {
 
 	call combineDBs {
 		input:
-			chr = chr,
+			chr = 'M',
 			group_variant_db = MergeBams.combined_db,
 			sqlite3 = sqlite3
 	}
 
 	output {
-		#File outfile1 = ReadVizVariantTable.outfile
-		#File outfile2 = KeyBySample.outfile
-		#File outfile3 = ExportPerSampleTSV.outfile
-		#File outfile4 = ExportPerSampleTSV.samples_with_variants
-		#File outfile5 = MakeGATKTSV.outfile
+		File outfile1 = ReadVizVariantTable.outfile
+		File outfile2 = KeyBySample.outfile
+		File outfile3 = ExportPerSampleTSV.outfile
+		File outfile4 = ExportPerSampleTSV.samples_with_variants
+		File outfile5 = MakeGATKTSV.outfile
 
 		#Array[File] output_raw_bam = PrintReadVizIntervals.output_raw_bam
 		#Array[File] output_raw_bai = PrintReadVizIntervals.output_raw_bai
@@ -136,14 +173,13 @@ workflow MultiSampleReadVizWorkflow {
 		#Array[File] output_bamout_cram = ConvertBamToCram.output_bamout_cram
 		#Array[File] output_bamout_cram_crai = ConvertBamToCram.output_bamout_cram_crai
 
-		#Array[File] de_identified_bam = DeIdentifyBam.de_identified_bam
-		#Array[File] variant_db = DeIdentifyBam.variant_db
+		Array[File] de_identified_bam = DeIdentifyBam.de_identified_bam
+		Array[File] variant_db = DeIdentifyBam.variant_db
 
-		#Array[File] gatk_args = MergeBams.gatk_args
+		Array[File] gatk_args = MergeBams.gatk_args
 		Array[File] combined_bam = MergeBams.combined_bam
-		Array[File] combined_bai = MergeBams.combined_bai
-		#Array[File] sql_file = MergeBams.sql_file
-		#Array[File] combined_db = MergeBams.combined_db
+		Array[File] sql_file = MergeBams.sql_file
+		Array[File] combined_db = MergeBams.combined_db
 
 		File chr_combined_db = combineDBs.chr_combined_db
 
@@ -385,7 +421,6 @@ task MergeBams {
 		String combined_bamout_id
 		Array[File] de_identified_bam
 		Array[File] variant_db
-		String chr
 		String gatk
 		String sqlite3
 	}
@@ -441,7 +476,7 @@ task MergeBams {
 		group_dbs = variant_dbs[${group_num}::${num_groups}]
 
 
-		combine_dbs(input_db_paths=group_dbs, set_combined_bamout_id="chr${chr}_${combined_bamout_id}", sqlite_queries_filename='group${group_num}_queries.sql')
+		combine_dbs(input_db_paths=group_dbs, set_combined_bamout_id="${combined_bamout_id}", sqlite_queries_filename='group${group_num}_queries.sql')
 
 		with open("inputs_${group_num}.list", "w") as fi:
 			for i in range(len(group_bams)):
@@ -452,18 +487,17 @@ task MergeBams {
 		${gatk} MergeSamFiles \
 		--VALIDATION_STRINGENCY SILENT --ASSUME_SORTED --CREATE_INDEX \
 		--arguments_file "inputs_${group_num}.list" \
-		-O "chr${chr}_${combined_bamout_id}.bam"
+		-O "${combined_bamout_id}.bam"
 
-		${sqlite3} "chr${chr}_${combined_bamout_id}.db" < "group${group_num}_queries.sql"
+		${sqlite3} "${combined_bamout_id}.chrM.db" < "group${group_num}_queries.sql"
 
 	}
 
 	output {
 		File sql_file = "group${group_num}_queries.sql"
 		File gatk_args = "inputs_${group_num}.list"
-		File combined_bam = "chr${chr}_${combined_bamout_id}.bam"
-		File combined_bai = "chr${chr}_${combined_bamout_id}.bai"
-		File combined_db = "chr${chr}_${combined_bamout_id}.db"
+		File combined_bam = "${combined_bamout_id}.bam"
+		File combined_db = "${combined_bamout_id}.chrM.db"
 	}
 
 	runtime {
@@ -548,7 +582,7 @@ task combineDBs {
 task PrintReadVizIntervals {
 
 	input {
-		#File all_variants_tsv_bgz
+		File all_variants_tsv_bgz
 		String variants_tsv_bgz
 		File input_bam
 		File input_bai
@@ -568,12 +602,15 @@ task PrintReadVizIntervals {
 
 		# echo --------------; echo "Start - time: $(date)"; set -euxo pipefail; df -kh; echo --------------
 
+		tar xvf ~{all_variants_tsv_bgz}
+
+		cp ~{variants_tsv_bgz} "~{output_prefix}_variants.tsv.bgz"
 
 		# 1) Convert variants_tsv_bgz to sorted interval list
 
 		zcat ~{variants_tsv_bgz} | awk '{ OFS="\t" } { print("chr"$1, $2 - ~{padding_around_variant} - 1, $2 + ~{padding_around_variant}) }' > variant_windows.bed
 		#zcat "${sample} | awk '{ OFS="\t" } { print("chr"$1, $2 - ~{padding_around_variant} - 1, $2 + ~{padding_around_variant}) }' > variant_windows.bed
-		#rm -rf ./variants_by_sample
+		rm -rf ./variants_by_sample
 
 		# Sort the .bed file so that chromosomes are in the same order as in the input_cram file.
 		# Without this, if the input_cram has a different chromosome ordering (eg. chr1, chr10, .. vs. chr1, chr2, ..)
@@ -616,7 +653,7 @@ task PrintReadVizIntervals {
 		# save small intermediate files for debugging
 		File input_cram_header = "header.bam"
 		File variant_windows_bed = "variant_windows.bed"
-		#File sample_variants_tsv_bgz = "${output_prefix}_variants.tsv.bgz"
+		File sample_variants_tsv_bgz = "${output_prefix}_variants.tsv.bgz"
 	}
 
 	runtime {
