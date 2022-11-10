@@ -9,8 +9,8 @@ workflow MultiSampleReadVizWorkflow {
 
 		String chr
 
-		Int PADDING_AROUND_VARIANT = 200
-		Int SAMPLES_PER_GROUP = 500
+		Int PADDING_AROUND_VARIANT
+		Int SAMPLES_PER_GROUP
 
 		File python_script4
 
