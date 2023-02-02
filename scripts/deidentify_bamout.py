@@ -102,6 +102,7 @@ def copy_reads_to_bam(obam, ibam, chrom, pos, ref, alt, zygosity, read_group_id)
     # iterate over the reads
     raw_reads = {}  # maps each artificial haplotype id (eg. HC tag value) to the list of reads assigned to this haplotype (eg. that have this id in their HC tag)
     for r in list(ibam.fetch(f"chr{chrom}", max(1, variant_start - FETCH_PADDING_AROUND_VARIANT), variant_end + FETCH_PADDING_AROUND_VARIANT)):
+    #for r in list(ibam.fetch(f"{chrom}", max(1, variant_start - FETCH_PADDING_AROUND_VARIANT), variant_end + FETCH_PADDING_AROUND_VARIANT)):
         tags = dict(r.tags)
         haplotype_id = tags.get('HC', 'reads-without-HC-tag')  # keep reads that aren't asigned to a haplotype
         if tags.get('RG') == "ArtificialHaplotype":

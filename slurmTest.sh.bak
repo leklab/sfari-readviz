@@ -37,10 +37,10 @@ exec 3>${TaskPipe}
 
 # Run cromwell with config file that routes tasks to disBatch.
 java -Dconfig.file=mk-slurm.conf -jar \
-/mnt/home/mlek/mlek/bin/cromwell-56.jar run \
-MultiSampleReadViz_consolidated.wdl \
+cromwell-56.jar run \
+MultiSampleReadViz.wdl \
 -o workflow.options \
--i readviz_inputs_consolidated.json \
+-i readviz_inputs.json \
 &> wdl_${SLURM_JOBID}.log
 
 # Close the pipe

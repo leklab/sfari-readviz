@@ -1,0 +1,18 @@
+{
+
+	"MultiSampleReadVizWorkflow.ref_fasta": "/mnt/ceph/users/sfida/DB/reference_genomes/GRCh38/GRCh38_full_analysis_set_plus_decoy_hla.fa",
+	"MultiSampleReadVizWorkflow.ref_fasta_fai": "/mnt/ceph/users/sfida/DB/reference_genomes/GRCh38/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai",
+	"MultiSampleReadVizWorkflow.ref_fasta_dict": "/mnt/ceph/users/sfida/DB/reference_genomes/GRCh38/GRCh38_full_analysis_set_plus_decoy_hla.dict",
+
+	"MultiSampleReadVizWorkflow.sample_input_file": "/mnt/home/mlek/mlek/readviz/iWES/iWES_chr20_test_tsv_bams.tsv",
+	"MultiSampleReadVizWorkflow.chr": "20",
+	"MultiSampleReadVizWorkflow.PADDING_AROUND_VARIANT": 200,
+	"MultiSampleReadVizWorkflow.SAMPLES_PER_GROUP": 500,
+
+	"MultiSampleReadVizWorkflow.gatk": "/mnt/home/sw/bioinfoCentos7/installs/GATK/4.2.1.0/gatk-4.2.1.0/gatk",
+	"MultiSampleReadVizWorkflow.samtools": "/mnt/ceph/users/info/software/samtools_rocky8/samtools-1.16.1/samtools",
+	"MultiSampleReadVizWorkflow.sqlite3": "/mnt/home/mlek/mlek/sqlite-tools-linux-x86-3360000/sqlite3",
+
+	"MultiSampleReadVizWorkflow.python_script4": "/mnt/home/mlek/mlek/dev/sfari-readviz/scripts/deidentify_bamout.py"
+
+}

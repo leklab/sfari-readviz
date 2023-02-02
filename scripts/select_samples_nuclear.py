@@ -94,7 +94,7 @@ def hemi_expr(mt):
 
 def main(args):
 
-    hl.init(log="./select_samples", default_reference="GRCh38")
+    hl.init(log="./select_samples", master='local[20]',spark_conf={'spark.driver.memory': '8g', 'spark.executor.memory': '8g'})
 
     '''
     intervals = ['1:100M-200M', '16:29.1M-30.2M', 'X']
@@ -113,16 +113,23 @@ def main(args):
     #chr14:21,385,610-21,386,182
     #mt = hl.filter_intervals(mt, [hl.parse_locus_interval('chrM:500-16000',reference_genome='GRCh38')])
 
-    mt = hl.import_vcf(args.input,reference_genome='GRCh38',array_elements_required=False,force_bgz=True,filter='MONOALLELIC')
+    rg = hl.get_reference('GRCh37')
+    grch37_contigs = [x for x in rg.contigs if not x.startswith('GL') and not x.startswith('M')]
+    contig_dict = dict(zip(grch37_contigs, ['chr'+x for x in grch37_contigs]))
+
+    mt = hl.import_vcf(args.input,reference_genome='GRCh38',contig_recoding=contig_dict,array_elements_required=False,force_bgz=True,filter='MONOALLELIC')
 
     #CHD8
     #mt = hl.filter_intervals(mt, [hl.parse_locus_interval('chr14:21385610-21386182',reference_genome='GRCh38')])
     #mt = hl.filter_intervals(mt, [hl.parse_locus_interval('chr14:21385195-21456127',reference_genome='GRCh38')])
 
+    '''
     exome_intervals = hl.import_locus_intervals('/mnt/home/mlek/ceph/resources/bed_files/exome_evaluation_regions.v1.interval_list', 
                         reference_genome='GRCh38')
 
     mt = mt.filter_rows(hl.is_defined(exome_intervals[mt.locus]))
+    '''
+
     mt = generate_split_alleles(mt)
 
 

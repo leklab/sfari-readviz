@@ -1,7 +1,7 @@
 {
-	"final_workflow_outputs_dir": "/mnt/home/mlek/mlek/wdl_tests/output",
-	"final_workflow_log_dir": "/mnt/home/mlek/mlek/wdl_tests/output",
-	"final_call_logs_dir": "/mnt/home/mlek/mlek/wdl_tests/output",
-	"delete_intermediate_output_files": true,
+	"final_workflow_outputs_dir": "/mnt/home/mlek/mlek/readviz/iWES/out_test",
+	"final_workflow_log_dir": "/mnt/home/mlek/mlek/readviz/iWES/out_test",
+	"final_call_logs_dir": "/mnt/home/mlek/mlek/readviz/iWES/out_test",
+	"delete_intermediate_output_files": false,
 	"use_relative_output_paths": true
 }

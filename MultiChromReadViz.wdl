@@ -1,6 +1,6 @@
 version 1.0
 
-import "MultiSampleReadViz.wdl" as single_wf
+import "MultiSampleReadViz_consolidated.wdl" as single_wf
 
 workflow MultiChromReadVizWorkflow {
 	input {
@@ -12,7 +12,7 @@ workflow MultiChromReadVizWorkflow {
 		Array[String] chr_list
 
 		Int PADDING_AROUND_VARIANT = 200
-		Int SAMPLES_PER_GROUP = 500
+		Int SAMPLES_PER_GROUP = 5000
 
 		File python_script4
 
